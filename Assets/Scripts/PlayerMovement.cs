@@ -86,31 +86,42 @@ public class PlayerMovement : MonoBehaviour
     }
 
     public IEnumerator MovePlayer(int steps)
+{
+    isMoving = true;
+
+    for (int i = 0; i < steps; i++)
     {
-        isMoving = true;
+        if (currentTileIndex >= tiles.Length - 1)
+            break;
 
-        for (int i = 0; i < steps; i++)
-        {
-            if (currentTileIndex >= tiles.Length - 1) break;
-
-            currentTileIndex++;
-            yield return StartCoroutine(MoveToTile(tiles[currentTileIndex]));
-        }
-
-        if (ladders.TryGetValue(currentTileIndex, out int ladderTarget))
-        {
-            currentTileIndex = ladderTarget;
-            yield return StartCoroutine(MoveToTile(tiles[currentTileIndex]));
-        }
-
-        if (portals.TryGetValue(currentTileIndex, out int portalTarget))
-        {
-            currentTileIndex = portalTarget;
-            yield return StartCoroutine(TeleportVisual(tiles[currentTileIndex]));
-        }
-
-        isMoving = false;
+        currentTileIndex++;
+        yield return StartCoroutine(MoveToTile(tiles[currentTileIndex]));
     }
+
+    // LADDER
+    if (ladders.TryGetValue(currentTileIndex, out int ladderTarget))
+    {
+        currentTileIndex = ladderTarget;
+        yield return StartCoroutine(MoveToTile(tiles[currentTileIndex]));
+    }
+
+    // PORTAL
+    if (portals.TryGetValue(currentTileIndex, out int portalTarget))
+    {
+        currentTileIndex = portalTarget;
+        yield return StartCoroutine(TeleportVisual(tiles[currentTileIndex]));
+    }
+
+    // ✅ END TILE CHECK (Tile 37)
+    if (currentTileIndex == 37)
+    {
+        Debug.Log("[PlayerMovement] Player reached final tile!");
+        EndGameManager.Instance.ShowEndScreen();
+    }
+
+    isMoving = false;
+}
+
 
     IEnumerator MoveToTile(Transform targetTile)
     {

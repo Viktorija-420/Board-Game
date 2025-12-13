@@ -1,96 +1,110 @@
 using UnityEngine;
 
-/// <summary>
-/// Simple script to animate a texture offset on a material so it looks like flowing lava.
-/// Attach to the GameObject with the Renderer (mesh, quad, plane, etc.).
-/// </summary>
 [DisallowMultipleComponent]
 public class FlowingLava : MonoBehaviour
 {
-    [Tooltip("Texture property to animate. Common: _MainTex (Standard), _BaseMap (URP/HDRP).")]
+    [Header("Texture")]
     public string textureProperty = "_MainTex";
 
-    [Tooltip("Offset speed in texture UV units per second (X, Y).")]
-    public Vector2 speed = new Vector2(0.08f, 0.05f);
+    [Header("Base Flow")]
+    public Vector2 baseFlowDirection = new Vector2(0.05f, 0.03f);
+    public float flowSpeed = 1f;
 
-    [Tooltip("Multiplies the base speed for more/less flow.")]
-    public float speedMultiplier = 1f;
+    [Header("Warping (Liquid Motion)")]
+    [Tooltip("How strong the UV warping is")]
+    public float warpStrength = 0.05f;
 
-    [Tooltip("If true, modifies the shared material (affects all objects using this material). " +
-             "If false, a temporary instance is created for this Renderer (safer for per-object variation).")]
+    [Tooltip("How fast the warp animation moves")]
+    public float warpSpeed = 0.6f;
+
+    [Tooltip("Scale of the noise pattern (larger = smoother blobs)")]
+    public float warpScale = 1.5f;
+
+    [Header("Bubbling / Pulsing")]
+    public float bubbleStrength = 0.02f;
+    public float bubbleSpeed = 2f;
+
+    [Header("Material Usage")]
     public bool useSharedMaterial = false;
 
-    // runtime
-    Material _instanceMaterial;     // the material we're writing to
-    Vector2 _initialOffset;
+    Material _mat;
     Renderer _renderer;
+    Vector2 _initialOffset;
 
     void Start()
     {
         _renderer = GetComponent<Renderer>();
         if (_renderer == null)
         {
-            Debug.LogError($"[{nameof(FlowingLava)}] No Renderer found on GameObject '{gameObject.name}'. Disabling script.");
+            Debug.LogError("FlowingLava: No Renderer found.");
             enabled = false;
             return;
         }
 
-        // pick material: sharedMaterial or instance
         if (useSharedMaterial)
         {
-            _instanceMaterial = _renderer.sharedMaterial;
+            _mat = _renderer.sharedMaterial;
         }
         else
         {
-            // create an instance so we don't modify the original asset
-            _instanceMaterial = new Material(_renderer.sharedMaterial);
-            _renderer.material = _instanceMaterial;
+            _mat = new Material(_renderer.sharedMaterial);
+            _renderer.material = _mat;
         }
 
-        // get initial offset (if property exists)
-        if (_instanceMaterial.HasProperty(textureProperty))
+        if (!_mat.HasProperty(textureProperty))
         {
-            _initialOffset = _instanceMaterial.GetTextureOffset(textureProperty);
-        }
-        else
-        {
-            Debug.LogWarning($"[{nameof(FlowingLava)}] Material does not have a texture property named '{textureProperty}'. " +
-                             "Check shader property name (e.g. _MainTex or _BaseMap). Disabling script.");
+            Debug.LogWarning($"FlowingLava: Material missing '{textureProperty}' property.");
             enabled = false;
+            return;
         }
+
+        _initialOffset = _mat.GetTextureOffset(textureProperty);
     }
 
     void Update()
     {
-        if (_instanceMaterial == null) return;
+        float t = Time.time;
 
-        // compute offset
-        Vector2 offset = _initialOffset + speed * speedMultiplier * Time.time;
+        // ---------- BASE FLOW ----------
+        Vector2 flow = baseFlowDirection * flowSpeed * t;
 
-        // keep offset in 0..1 range for numeric stability
-        offset.x = Mathf.Repeat(offset.x, 1f);
-        offset.y = Mathf.Repeat(offset.y, 1f);
+        // ---------- NOISE WARP (SWIRLING MOTION) ----------
+        float noiseX = Mathf.PerlinNoise(t * warpSpeed, 0.0f);
+        float noiseY = Mathf.PerlinNoise(0.0f, t * warpSpeed);
 
-        _instanceMaterial.SetTextureOffset(textureProperty, offset);
+        Vector2 warp =
+            new Vector2(
+                noiseX - 0.5f,
+                noiseY - 0.5f
+            ) * warpStrength;
+
+        // ---------- BUBBLE PULSE ----------
+        float bubble = Mathf.Sin(t * bubbleSpeed) * bubbleStrength;
+
+        Vector2 bubbleOffset = new Vector2(bubble, bubble * 0.5f);
+
+        // ---------- FINAL OFFSET ----------
+        Vector2 finalOffset =
+            _initialOffset +
+            flow +
+            warp +
+            bubbleOffset;
+
+        finalOffset.x = Mathf.Repeat(finalOffset.x, 1f);
+        finalOffset.y = Mathf.Repeat(finalOffset.y, 1f);
+
+        _mat.SetTextureOffset(textureProperty, finalOffset);
     }
 
     void OnDestroy()
     {
-        // If we created an instance material, destroy it to avoid leaks
-        if (!useSharedMaterial && _instanceMaterial != null)
+        if (!useSharedMaterial && _mat != null)
         {
-            // If running in editor, DestroyImmediate may be appropriate, but Destroy is fine at runtime.
 #if UNITY_EDITOR
-            DestroyImmediate(_instanceMaterial);
+            DestroyImmediate(_mat);
 #else
-            Destroy(_instanceMaterial);
+            Destroy(_mat);
 #endif
         }
-    }
-
-    // Optionally expose a method to change speed at runtime
-    public void SetSpeed(Vector2 newSpeed)
-    {
-        speed = newSpeed;
     }
 }
