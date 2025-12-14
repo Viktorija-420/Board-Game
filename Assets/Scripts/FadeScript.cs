@@ -4,32 +4,65 @@ using UnityEngine.UI;
 
 public class FadeScript : MonoBehaviour
 {
-    Image img;
-    Color tempColor;
+    [Header("Optional Image for fade")]
+    [SerializeField] private Image img;
+
+    private Color tempColor;
+
+    void Awake()
+    {
+        // If not assigned in inspector, try to get Image from this GameObject
+        if (img == null)
+        {
+            img = GetComponent<Image>();
+        }
+
+        if (img == null)
+        {
+            Debug.LogWarning("[FadeScript] No Image component assigned or found on " + gameObject.name);
+        }
+    }
 
     void Start()
     {
-        img = GetComponent<Image>();
-        tempColor = img.color;
-        tempColor.a = 1f;
-        img.color = tempColor;
-        StartCoroutine(FadeIn(0.20f));
+        if (img != null)
+        {
+            tempColor = img.color;
+            tempColor.a = 1f;
+            img.color = tempColor;
+            StartCoroutine(FadeIn(0.2f));
+        }
     }
 
+    /// <summary>
+    /// Fades in (from opaque to transparent)
+    /// </summary>
     public IEnumerator FadeIn(float fadeSpeed)
     {
-       for (float a=1f; a>=-0.05; a-=0.05f) {
+        if (img == null) yield break;
+
+        img.raycastTarget = true;
+        for (float a = 1f; a >= 0f; a -= 0.05f)
+        {
             tempColor = img.color;
             tempColor.a = a;
             img.color = tempColor;
             yield return new WaitForSecondsRealtime(fadeSpeed);
         }
-       img.raycastTarget = false;
+
+        img.raycastTarget = false; // allow clicks through
     }
 
+    /// <summary>
+    /// Fades out (from transparent to opaque)
+    /// </summary>
     public IEnumerator FadeOut(float fadeSpeed)
     {
-       for (float a=0f; a<=1.05f; a+=0.05f) {
+        if (img == null) yield break;
+
+        img.raycastTarget = true;
+        for (float a = 0f; a <= 1f; a += 0.05f)
+        {
             tempColor = img.color;
             tempColor.a = a;
             img.color = tempColor;

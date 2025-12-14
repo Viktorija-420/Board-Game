@@ -4,64 +4,86 @@ using UnityEngine.SceneManagement;
 
 public class SceneChanger : MonoBehaviour
 {
+    [Header("Dependencies")]
     public SaveLoadScript saveLoadScript;
     public FadeScript fadeScript;
+
+    // -----------------------------
+    // PUBLIC BUTTON METHODS
+    // -----------------------------
 
     // Quit the game
     public void CloseGame()
     {
-        StartCoroutine(Delay("quit", -1, ""));
+        StartCoroutine(Delay("quit"));
     }
 
-    // Go to main menu
+    // Go to Main Menu
     public void GoToMenu()
     {
-        StartCoroutine(Delay("menu", -1, ""));
+        StartCoroutine(Delay("menu"));
     }
 
-    // ➜ Go to settings scene (NEW)
+    // Go to Settings
     public void GoToSettings()
     {
-        StartCoroutine(Delay("settings", -1, ""));
+        StartCoroutine(Delay("settings"));
     }
 
-    public IEnumerator Delay(string command, int characterIndex, string characterName)
+    // Start/Play Level1 from MainMenu or ChooseCharacter
+    public void PlayGame()
     {
-        // QUIT GAME
-        if (string.Equals(command, "quit", System.StringComparison.OrdinalIgnoreCase))
-        {
-            yield return fadeScript.FadeOut(0.1f);
-            PlayerPrefs.DeleteAll();
+        StartCoroutine(Delay("play"));
+    }
 
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
-        }
-
-        // START GAME
-        else if (string.Equals(command, "play", System.StringComparison.OrdinalIgnoreCase))
+    // -----------------------------
+    // CORE DELAY METHOD
+    // Supports optional save parameters
+    // -----------------------------
+    public IEnumerator Delay(string command, int characterIndex = -1, string characterName = "")
+    {
+        // Save game if SaveLoadScript is assigned
+        if (saveLoadScript != null && characterIndex >= 0)
         {
-            yield return fadeScript.FadeOut(0.1f);
             saveLoadScript.SaveGame(characterIndex, characterName);
-            SceneManager.LoadScene(1, LoadSceneMode.Single);
         }
 
-        // MAIN MENU
-        else if (string.Equals(command, "menu", System.StringComparison.OrdinalIgnoreCase))
+        // Fade out if FadeScript assigned
+        if (fadeScript != null)
         {
             yield return fadeScript.FadeOut(0.1f);
-            SceneManager.LoadScene(0, LoadSceneMode.Single);
         }
 
-        // ➜ SETTINGS SCENE (NEW)
-        else if (string.Equals(command, "settings", System.StringComparison.OrdinalIgnoreCase))
-        {
-            yield return fadeScript.FadeOut(0.1f);
+        // Reset time scale before scene change
+        Time.timeScale = 1f;
 
-            // ⚠️ Change this index if your settings scene has another index in Build Settings
-            SceneManager.LoadScene(2, LoadSceneMode.Single);
+        // Handle scene loading
+        switch (command.ToLower())
+        {
+            case "play":
+                SceneManager.LoadScene("Level1", LoadSceneMode.Single);
+                break;
+
+            case "menu":
+                SceneManager.LoadScene("MainMenu", LoadSceneMode.Single);
+                break;
+
+            case "settings":
+                SceneManager.LoadScene("SettingsScene", LoadSceneMode.Single);
+                break;
+
+            case "quit":
+                PlayerPrefs.DeleteAll();
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#else
+                Application.Quit();
+#endif
+                break;
+
+            default:
+                Debug.LogWarning("[SceneChanger] Unknown command: " + command);
+                break;
         }
     }
 }
