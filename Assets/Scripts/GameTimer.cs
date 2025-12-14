@@ -5,9 +5,14 @@ public class GameTimer : MonoBehaviour
 {
     public static GameTimer Instance;
 
-    [SerializeField] private Text timerText; // UI Text shown during gameplay
+    [Header("Gameplay UI Root")]
+    [SerializeField] private GameObject gameplayUIRoot; // Parent of ALL gameplay UI
+
+    [Header("Timer UI")]
+    [SerializeField] private Text timerText;
 
     private float startTime;
+    private float finalTime;
     private bool isRunning = false;
 
     void Awake()
@@ -25,7 +30,10 @@ public class GameTimer : MonoBehaviour
     {
         startTime = Time.time;
         isRunning = true;
-        timerText.gameObject.SetActive(true);
+
+        // Enable gameplay UI at start
+        if (gameplayUIRoot != null)
+            gameplayUIRoot.SetActive(true);
     }
 
     void Update()
@@ -40,10 +48,33 @@ public class GameTimer : MonoBehaviour
         timerText.text = minutes.ToString("00") + ":" + seconds.ToString("00");
     }
 
-    public float StopTimer()
+    // ⏱ Stops timer, disables ALL gameplay UI, saves final time
+    public void StopTimer()
     {
+        if (!isRunning) return;
+
+        finalTime = Time.time - startTime;
         isRunning = false;
-        timerText.gameObject.SetActive(false);
-        return Time.time - startTime;
+
+        // Disable ALL gameplay UI
+        if (gameplayUIRoot != null)
+            gameplayUIRoot.SetActive(false);
     }
+
+    // ⏱ Used by EndGameManager
+    public string GetFormattedFinalTime()
+    {
+        int minutes = Mathf.FloorToInt(finalTime / 60f);
+        int seconds = Mathf.FloorToInt(finalTime % 60f);
+
+        return minutes.ToString("00") + ":" + seconds.ToString("00");
+    }
+
+    public void ResetTimer()
+    {
+        startTime = Time.time;
+        finalTime = 0f;
+        isRunning = true;
+    }
+
 }

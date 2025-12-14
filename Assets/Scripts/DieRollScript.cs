@@ -58,6 +58,8 @@ public class DieRollScript : MonoBehaviour
                         firstThrow = true;
 
                     RollDice();
+                    DiceRollCounter.Instance.AddRoll();
+
                     }
                 }
             }

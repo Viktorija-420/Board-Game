@@ -1,13 +1,17 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.SceneManagement;
+
 
 public class EndGameManager : MonoBehaviour
 {
     public static EndGameManager Instance;
 
     [SerializeField] private GameObject endScreenPanel;
-    [SerializeField] private Text timeText; // Legacy UI Text
+    [SerializeField] private Text timeText; // Text on END GAME PANEL
+    [SerializeField] private Text rollsText; // Text on END GAME PANEL
+
 
     [Header("Camera Transition")]
     [SerializeField] private float cameraTransitionDuration = 1.5f;
@@ -17,9 +21,6 @@ public class EndGameManager : MonoBehaviour
     // Camera target
     private readonly Vector3 endPosition = new Vector3(0f, 11.3f, -1.12f);
     private readonly Quaternion endRotation = Quaternion.Euler(12.82f, 0f, 0f);
-
-    // ⏱ TIMER START
-    private float startTime;
 
     void Awake()
     {
@@ -32,13 +33,14 @@ public class EndGameManager : MonoBehaviour
         Instance = this;
         mainCamera = Camera.main;
 
-        startTime = Time.timeSinceLevelLoad; // ⏱ START TIMER
-
         endScreenPanel.SetActive(false);
     }
 
     public void ShowEndScreen()
     {
+        // ⏱ Stop gameplay timer BEFORE showing UI
+        GameTimer.Instance.StopTimer();
+
         StartCoroutine(CameraTransition());
     }
 
@@ -65,17 +67,31 @@ public class EndGameManager : MonoBehaviour
 
     private void ShowEndUI()
     {
-        // ⏱ CALCULATE FINAL TIME
-        float totalTime = Time.timeSinceLevelLoad - startTime;
+        // ⏱ Final time
+        timeText.text = GameTimer.Instance.GetFormattedFinalTime();
 
-        int minutes = Mathf.FloorToInt(totalTime / 60f);
-        int seconds = Mathf.FloorToInt(totalTime % 60f);
-
-        timeText.text = "Time Pld: " +
-                        minutes.ToString("00") + ":" +
-                        seconds.ToString("00");
+        // 🎲 Total rolls
+        rollsText.text = DiceRollCounter.GetTotalRolls().ToString();
 
         endScreenPanel.SetActive(true);
         Time.timeScale = 0f;
     }
+
+    public void PlayAgain()
+    {
+        GameTimer.Instance.ResetTimer();
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
+        );
+    }
+
+    public void ExitToMainMenu()
+    {
+        Time.timeScale = 1f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+    }
+
+
+
 }
