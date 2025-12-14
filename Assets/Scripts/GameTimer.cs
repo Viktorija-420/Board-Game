@@ -77,4 +77,27 @@ public class GameTimer : MonoBehaviour
         isRunning = true;
     }
 
+    // -----------------------------
+    // NEW: Reset everything for DiceButton
+    // -----------------------------
+    public void ResetGame()
+{
+    // Reset timer
+    ResetTimer();
+
+    // Reset rolled times (updates UI too)
+    DiceRollCounter.Instance?.ResetRolls();
+
+    // Reset selected character (optional)
+    PlayerPrefs.DeleteKey("SelectedCharacter");
+    PlayerPrefs.DeleteKey("PlayerName");
+    PlayerPrefs.DeleteKey("PlayerCount");
+
+    // Re-enable gameplay UI
+    if (gameplayUIRoot != null)
+        gameplayUIRoot.SetActive(true);
+
+    Debug.Log("[GameTimer] Game has been reset via DiceButton.");
+}
+
 }

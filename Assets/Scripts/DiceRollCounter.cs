@@ -37,6 +37,11 @@ public class DiceRollCounter : MonoBehaviour
     {
         return rollCount;
     }
+    public void ResetRollCount()
+    {
+        rollCount = 0;
+        Debug.Log("[DiceRollCounter] Roll count reset.");
+    }
 
     public static int GetTotalRolls()
     {
