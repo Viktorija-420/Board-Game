@@ -549,6 +549,28 @@ TextureImporter:
       indices: 
       edges: []
       weights: []
+    - serializedVersion: 2
+      name: panel_20
+      rect:
+        serializedVersion: 2
+        x: 729
+        y: 202
+        width: 217
+        height: 217
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a87dc3df8de02f2408393905252d53f5
+      internalID: 310944312
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
     outline: []
     customData: 
     physicsShape: []
@@ -576,6 +598,7 @@ TextureImporter:
       panel_18: 390705507
       panel_19: 1213705159
       panel_2: 919129577
+      panel_20: 310944312
       panel_3: 288072372
       panel_4: -658467744
       panel_5: 1230773589
