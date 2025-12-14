@@ -4125,7 +4125,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 683773723}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1436834404}
+        m_TargetAssemblyTypeName: EndGameManager, Assembly-CSharp
+        m_MethodName: ExitToMainMenu
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &683773723
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4146,7 +4158,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -1591323729, guid: 34e97162c5304c346afb1f5c1a94e0da, type: 3}
+  m_Sprite: {fileID: 2054195208, guid: 34e97162c5304c346afb1f5c1a94e0da, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
