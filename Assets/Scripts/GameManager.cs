@@ -7,15 +7,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        // Check if dice landed and player exists
-        if (dieRoll != null && playerScript != null && playerScript.mainPlayerMovement != null && dieRoll.isLanded)
-        {
-            if (!string.IsNullOrEmpty(dieRoll.diceFaceNum))
-            {
-                int steps = int.Parse(dieRoll.diceFaceNum); // convert dice result to int
-                playerScript.mainPlayerMovement.MovePlayer(steps);
-                dieRoll.isLanded = false; // reset dice state
-            }
-        }
+        // TurnManager now centrally handles consuming die results and starting movement.
+        // GameManager no longer auto-consumes die landings to ensure the human player must roll manually.
     }
 }

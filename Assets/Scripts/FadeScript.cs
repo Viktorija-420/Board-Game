@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class FadeScript : MonoBehaviour
 {
+    // When true, the next automatic FadeIn in Start() will be skipped and the image hidden immediately.
+    public static bool skipNextFadeOnStart = false;
+
     [Header("Optional Image for fade")]
     [SerializeField] private Image img;
 
@@ -30,7 +33,18 @@ public class FadeScript : MonoBehaviour
             tempColor = img.color;
             tempColor.a = 1f;
             img.color = tempColor;
-            StartCoroutine(FadeIn(0.2f));
+            if (skipNextFadeOnStart)
+            {
+                // hide immediately and reset flag
+                tempColor.a = 0f;
+                img.color = tempColor;
+                img.raycastTarget = false;
+                skipNextFadeOnStart = false;
+            }
+            else
+            {
+                StartCoroutine(FadeIn(0.2f));
+            }
         }
     }
 

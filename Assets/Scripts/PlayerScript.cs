@@ -22,6 +22,17 @@ public class PlayerScript : MonoBehaviour
         // Get the PlayerMovement component for runtime reference
         mainPlayerMovement = mainCharacter.GetComponent<PlayerMovement>();
 
+        // Ensure TurnManager exists and mark main player
+        if (TurnManager.Instance == null)
+        {
+            GameObject tm = new GameObject("TurnManager");
+            tm.AddComponent<TurnManager>();
+        }
+        if (mainPlayerMovement != null)
+        {
+            mainPlayerMovement.MarkAsPlayer();
+            TurnManager.Instance.RegisterPlayer(mainPlayerMovement);
+        }
         // Spawn other players
         int playerCount = PlayerPrefs.GetInt("PlayerCount", 2);
         string[] nameArray = ReadLinesFromFile(textFileName);
@@ -35,7 +46,12 @@ public class PlayerScript : MonoBehaviour
 
             otherPlayer.GetComponent<NameScript>().SetName(
                 nameArray[Random.Range(0, nameArray.Length)]);
+
+            // register NPC player movement with TurnManager
+            var pm = otherPlayer.GetComponent<PlayerMovement>();
+            if (pm != null) TurnManager.Instance.RegisterPlayer(pm);
         }
+
     }
 
     string[] ReadLinesFromFile(string fileName)

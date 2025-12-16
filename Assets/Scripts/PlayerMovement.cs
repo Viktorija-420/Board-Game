@@ -10,12 +10,36 @@ public class PlayerMovement : MonoBehaviour
     [Header("Teleport Visuals")]
     [SerializeField] private float fadeDuration = 0.15f;
 
+    [Header("Animation")]
+    [Tooltip("Assign the Animator from the character prefab (or leave empty to auto-find)")]
+    [SerializeField] private Animator animator;
+
+    [Header("Positioning")]
+    [Tooltip("Vertical offset applied when placing character on a tile to avoid sinking into the floor")]
+    [SerializeField] private float tileYOffset = 0.5f;
+
     [Header("Dice Reference")]
     [SerializeField] private DieRollScript dieRollScript;
 
     private int currentTileIndex = 0;
     private bool isMoving = false;
     private bool hasMovedThisRoll = false;
+    private bool isTurn = false;
+    public bool IsPlayer { get; private set; } = false; // set by PlayerScript for the human player
+    public bool IsTurn { get { return isTurn; } }
+
+    // Per-character dice throw counter
+    private int diceRollCount = 0;
+
+    public void IncrementDiceRolls()
+    {
+        diceRollCount++;
+    }
+
+    public int GetDiceRolls()
+    {
+        return diceRollCount;
+    }
 
     private Renderer[] renderers;
 
@@ -39,13 +63,26 @@ public class PlayerMovement : MonoBehaviour
     {
         renderers = GetComponentsInChildren<Renderer>();
 
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+            if (animator == null)
+            {
+                Debug.LogWarning("[PlayerMovement] No Animator found on character. Assign one in the inspector to enable animations.");
+            }
+        }
+
         if (tiles == null || tiles.Length == 0)
         {
             Debug.LogError("[PlayerMovement] Tiles array is EMPTY in BoardManager!");
             return;
         }
 
-        transform.position = tiles[currentTileIndex].position;
+        var startPos = tiles[currentTileIndex].position;
+        startPos.y += tileYOffset;
+        transform.position = startPos;
+
+        // registration is handled by PlayerScript to ensure correct ordering
     }
 
     void EnsureDieReference()
@@ -72,22 +109,34 @@ public class PlayerMovement : MonoBehaviour
         EnsureDieReference();
         if (dieRollScript == null) return;
 
-        if (dieRollScript.isLanded && !isMoving && !hasMovedThisRoll)
-        {
-            if (int.TryParse(dieRollScript.diceFaceNum, out int rolledValue))
-            {
-                Debug.Log("[PlayerMovement] Moving player by " + rolledValue + " steps.");
-                StartCoroutine(MovePlayer(rolledValue));
-                hasMovedThisRoll = true;
-            }
-        }
+        // Only respond to dice when it's this character's turn
+        if (!isTurn) return;
 
-        if (!dieRollScript.isLanded) hasMovedThisRoll = false;
+        // Only the human player should respond to die-land events here.
+        // NPC movement is driven by TurnManager so they won't start moving prematurely.
+        if (!IsPlayer) return;
+
+        // Player movement is initiated by GameManager when the die lands.
+        // This prevents duplicate movement calls if both GameManager and this component reacted.
     }
 
     public IEnumerator MovePlayer(int steps)
 {
+    string cname = GetCharacterName();
+    if (isMoving)
+    {
+        Debug.LogWarning($"[PlayerMovement] {cname} MovePlayer called but already moving. Ignoring duplicate call.");
+        yield break;
+    }
+    Debug.Log($"[PlayerMovement] {cname} MovePlayer START steps={steps} tileIndexBefore={currentTileIndex}");
     isMoving = true;
+
+    // Animation: start walking
+    if (animator != null)
+    {
+        animator.SetBool("Idle", false);
+        animator.SetBool("Walk", true);
+    }
 
     for (int i = 0; i < steps; i++)
     {
@@ -108,45 +157,82 @@ public class PlayerMovement : MonoBehaviour
     // PORTAL
     if (portals.TryGetValue(currentTileIndex, out int portalTarget))
     {
+        // trigger teleport animation and perform a slower fade-out (2 seconds)
+        if (animator != null)
+        {
+            animator.SetBool("Idle", false);
+            animator.SetBool("Walk", false);
+            animator.SetTrigger("Teleport");
+        }
+
+        // play visual teleport first, only update the logical tile index after the visual completes
+        yield return StartCoroutine(TeleportVisual(tiles[portalTarget], 2f, fadeDuration));
         currentTileIndex = portalTarget;
-        yield return StartCoroutine(TeleportVisual(tiles[currentTileIndex]));
     }
 
     // ✅ END TILE CHECK (Tile 37)
     if (currentTileIndex == 37)
     {
-        Debug.Log("[PlayerMovement] Player reached final tile!");
-        EndGameManager.Instance.ShowEndScreen();
+        Debug.Log($"[PlayerMovement] {cname} reached final tile!");
+        // notify TurnManager so end screen only shows when all players finish
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.NotifyPlayerFinished(this);
+        }
+        else
+        {
+            EndGameManager.Instance.ShowEndScreen();
+        }
+        // prevent further movement for this character
+        isTurn = false;
+        isMoving = false;
+        yield break;
+    }
+
+    // Animation: stop walking, go to idle
+    if (animator != null)
+    {
+        animator.SetBool("Walk", false);
+        animator.SetBool("Idle", true);
     }
 
     isMoving = false;
+    Debug.Log($"[PlayerMovement] {cname} MovePlayer END at tileIndex={currentTileIndex}");
+
+    // Notify TurnManager that this player's turn is finished
+    if (TurnManager.Instance != null)
+    {
+        TurnManager.Instance.EndTurn();
+    }
 }
 
 
     IEnumerator MoveToTile(Transform targetTile)
     {
-        while (Vector3.Distance(transform.position, targetTile.position) > 0.01f)
+        Vector3 targetPos = new Vector3(targetTile.position.x, targetTile.position.y + tileYOffset, targetTile.position.z);
+        while (Vector3.Distance(transform.position, targetPos) > 0.01f)
         {
-            transform.position = Vector3.MoveTowards(transform.position, targetTile.position, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
             yield return null;
         }
-        transform.position = targetTile.position;
+        transform.position = targetPos;
     }
 
-    IEnumerator TeleportVisual(Transform targetTile)
+    IEnumerator TeleportVisual(Transform targetTile, float outDuration, float inDuration)
     {
-        yield return StartCoroutine(Fade(1f, 0f));
-        transform.position = targetTile.position;
-        yield return StartCoroutine(Fade(0f, 1f));
+        yield return StartCoroutine(Fade(1f, 0f, outDuration));
+        Vector3 tpPos = new Vector3(targetTile.position.x, targetTile.position.y + tileYOffset, targetTile.position.z);
+        transform.position = tpPos;
+        yield return StartCoroutine(Fade(0f, 1f, inDuration));
     }
 
-    IEnumerator Fade(float startAlpha, float endAlpha)
+    IEnumerator Fade(float startAlpha, float endAlpha, float duration)
     {
         float elapsed = 0f;
-        while (elapsed < fadeDuration)
+        while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
-            SetAlpha(Mathf.Lerp(startAlpha, endAlpha, elapsed / fadeDuration));
+            SetAlpha(Mathf.Lerp(startAlpha, endAlpha, elapsed / duration));
             yield return null;
         }
         SetAlpha(endAlpha);
@@ -166,5 +252,26 @@ public class PlayerMovement : MonoBehaviour
                 }
             }
         }
+    }
+
+    // Called by TurnManager to assign turn ownership
+    public void SetTurn(bool active)
+    {
+        isTurn = active;
+        // reset move state so player can act when their turn begins
+        hasMovedThisRoll = false;
+    }
+
+    public string GetCharacterName()
+    {
+        var nameScript = GetComponent<NameScript>();
+        if (nameScript != null) return nameScript.GetName();
+        return gameObject.name;
+    }
+
+    // Called by PlayerScript to mark the real human player
+    public void MarkAsPlayer()
+    {
+        IsPlayer = true;
     }
 }

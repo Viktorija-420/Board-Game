@@ -15,9 +15,12 @@ public class RolledNumberScript : MonoBehaviour
     {
         if (dieRollScript != null)
         {
-            if(dieRollScript.isLanded)
+            // Color the rolled number green when it's the human player's turn
+            bool isPlayersTurn = TurnManager.Instance != null && TurnManager.Instance.IsPlayersMove;
+            rolledNumberText.color = isPlayersTurn ? Color.green : Color.white;
+
+            if (dieRollScript.isLanded)
                 rolledNumberText.text = dieRollScript.diceFaceNum;
-            
             else
                 rolledNumberText.text = "?";
         }else

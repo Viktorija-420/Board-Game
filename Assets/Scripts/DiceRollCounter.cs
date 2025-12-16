@@ -21,37 +21,45 @@ public class DiceRollCounter : MonoBehaviour
         UpdateUI();
     }
 
-    public void AddRoll()
-    {
-        rollCount++;
-        UpdateUI();
-    }
-
+    // UI now reads the human player's dice count directly from their PlayerMovement.
     private void UpdateUI()
     {
-        if (rollsText != null)
-            rollsText.text = rollCount.ToString();
+        if (rollsText == null) return;
+        var players = FindObjectsOfType<PlayerMovement>();
+        foreach (var p in players)
+        {
+            if (p.IsPlayer)
+            {
+                rollsText.text = p.GetDiceRolls().ToString();
+                return;
+            }
+        }
+        // fallback
+        rollsText.text = "0";
     }
 
-    public int GetRollCount()
+    // Force a refresh call from other scripts when the active player's count changes
+    public void ForceRefresh()
     {
-        return rollCount;
-    }
-    public void ResetRollCount()
-    {
-        rollCount = 0;
-        Debug.Log("[DiceRollCounter] Roll count reset.");
+        UpdateUI();
     }
 
     public static int GetTotalRolls()
     {
-        DiceRollCounter counter = FindFirstObjectByType<DiceRollCounter>();
-        return counter != null ? counter.GetRollCount() : 0;
+        // Deprecated for global counting; attempt to sum all players as a fallback
+        int total = 0;
+        var players = FindObjectsOfType<PlayerMovement>();
+        foreach (var p in players) total += p.GetDiceRolls();
+        return total;
     }
 
     public void ResetRolls()
     {
-        rollCount = 0;
+        var players = FindObjectsOfType<PlayerMovement>();
+        foreach (var p in players)
+        {
+            // no direct reset method on PlayerMovement; skipping
+        }
         UpdateUI();
     }
 

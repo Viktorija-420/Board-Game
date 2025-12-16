@@ -36,6 +36,12 @@ public class SceneChanger : MonoBehaviour
         StartCoroutine(Delay("play"));
     }
 
+    // Go to Leaderboard scene
+    public void GoToLeaderboard()
+    {
+        StartCoroutine(Delay("leaderboard"));
+    }
+
     // -----------------------------
     // CORE DELAY METHOD
     // Supports optional save parameters
@@ -48,10 +54,27 @@ public class SceneChanger : MonoBehaviour
             saveLoadScript.SaveGame(characterIndex, characterName);
         }
 
-        // Fade out if FadeScript assigned
-        if (fadeScript != null)
+        // Fade out if FadeScript assigned — skip for quick scenes (leaderboard, menu, settings)
+        bool skipFade = false;
+        switch (command.ToLower())
+        {
+            case "leaderboard":
+            case "leaderboardscene":
+            case "menu":
+            case "settings":
+            case "settingsscene":
+                skipFade = true;
+                break;
+        }
+
+        if (fadeScript != null && !skipFade)
         {
             yield return fadeScript.FadeOut(0.1f);
+        }
+        else if (skipFade)
+        {
+            // signal FadeScript to skip its next automatic FadeIn when the new scene starts
+            FadeScript.skipNextFadeOnStart = true;
         }
 
         // Reset time scale before scene change
@@ -70,6 +93,11 @@ public class SceneChanger : MonoBehaviour
 
             case "settings":
                 SceneManager.LoadScene("SettingsScene", LoadSceneMode.Single);
+                break;
+
+            case "leaderboard":
+            case "leaderboardscene":
+                SceneManager.LoadScene("LeaderboardScene", LoadSceneMode.Single);
                 break;
 
             case "quit":
