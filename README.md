@@ -28,6 +28,8 @@ Galvenajā izvēlnē tev ir pieejamas šādas opcijas:
 - ⚙ **Iestatījumi**
 - ❌ **Iziet no Spēles**
 
+- <img width="1488" height="827" alt="image" src="https://github.com/user-attachments/assets/dbdb03fa-0c66-4c5a-80b3-916aa486fd29" />
+
 ---
 
 ## 🏆 Līderu Saraksts
@@ -40,6 +42,8 @@ Līderu sarakstā vari apskatīt:
 
 Ja tavs rezultāts ir pietiekami labs — tu iekļūsi Top 7! 💪
 
+<img width="1489" height="833" alt="image" src="https://github.com/user-attachments/assets/e832db84-0c41-43c2-b41d-c7622f2c6b62" />
+
 ---
 
 ## ⚙ Iestatījumi
@@ -49,6 +53,8 @@ Iestatījumu sadaļā vari pielāgot spēli savām vēlmēm:
 - 🔊 Skaļuma maiņa
 - 🖥 Pilnekrāna režīms (Fullscreen)
 - 📐 Ekrāna izšķirtspēja (Resolution)
+
+<img width="1480" height="827" alt="image" src="https://github.com/user-attachments/assets/46d233f8-7898-4517-8507-faad88663dc8" />
 
 ---
 
@@ -60,6 +66,8 @@ Uzsākot spēli, tev būs jā:
 2. 🧙 **Izvēlas vienu no 7 pieejamiem tēliem**
 3. 🚀 Sāc savu piedzīvojumu uz spēles laukuma
 
+<img width="1484" height="824" alt="image" src="https://github.com/user-attachments/assets/da072cca-1a0c-466a-8421-c31033df30cd" />
+
 ---
 
 ## 🎮 Spēles Gaita
@@ -70,6 +78,8 @@ Uzsākot spēli, tev būs jā:
   - Ja uzkāp uz sarkanā portāla, tu tiksi **teleportēts atpakaļ uz zaļo portālu**
 
 ⚠ Esi uzmanīgs un plāno savus gājienus gudri!
+
+<img width="1488" height="823" alt="image" src="https://github.com/user-attachments/assets/88e3135a-1c96-42f6-ab86-364e46d7a7dd" />
 
 ---
 
@@ -91,6 +101,8 @@ Spēles beigās redzēsi:
 - 🏆 Savu gala rezultātu
 
 Ja esi pietiekami labs — tavs vārds parādīsies **Top 7 spēlētāju** sarakstā!
+
+<img width="1478" height="825" alt="image" src="https://github.com/user-attachments/assets/c421f813-4af5-44c3-ae9a-aa02dc1fe8df" />
 
 ---
 
